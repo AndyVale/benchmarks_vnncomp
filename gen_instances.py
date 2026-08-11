@@ -65,8 +65,8 @@ Generates a file containing networks that are from the 'residual' or 'fullyconne
     parser.add_argument('--inbench', '-ib', type=str, required=False, help="List of benchmarks from which the networks can be picked, default is any benchmark")
     parser.add_argument('--exbench', '-eb', type=str, required=False, help="List of benchmarks from which the networks can not be picked, default is none")
 
-    parser.add_argument('--inarc', '-ia', type=str, required=False, choices=ARCHITECTURES, help="List of architectures from which the networks can be picked, default is any architecture")
-    parser.add_argument('--exarc', '-ea', type=str, required=False, choices=ARCHITECTURES, help="List of architectures from which the networks can not be picked, default is none")
+    parser.add_argument('--inarc', '-ia', type=str, required=False, help="List of architectures from which the networks can be picked, default is any architecture")
+    parser.add_argument('--exarc', '-ea', type=str, required=False, help="List of architectures from which the networks can not be picked, default is none")
 
     parser.add_argument('--max_par', '-Mp', type=int, required=False, default=-1, help="Maximum number of parameters for network")
     parser.add_argument('--min_par', '-mp', type=int, required=False, default=-1, help="Minimum number of parameters for network")
@@ -214,7 +214,7 @@ def load_nns_dataframe(file_path: str) -> pd.DataFrame:
 
 def get_instances_path(ser: pd.Series) -> str:
     '''Convert the series to "instances.csv" file's path in the associated repository with the parametr, this can be done looking at architecture and benchmark columns'''
-    path = ''
+    path = BENCHMARKS_VNNCOMP_DIR
     if ser.empty:
         raise ValueError('Series is empty')
 

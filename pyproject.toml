@@ -1,0 +1,12 @@
+[project]
+name = "benchmarks-vnncomp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "customtkinter>=6.0.0",
+    "onnx>=1.22.0",
+    "pandas>=3.0.5",
+    "pytest>=9.1.1",
+]
