@@ -1,12 +1,15 @@
+import sys
+from PyQt6.QtWidgets import QApplication
+
 from .main_gui import GUI
 from .logic import logic
 
-# Thanks to Akascape: https://github.com/Akascape/CTkXYFrame, https://github.com/Akascape/CTkScrollableDropdown, https://github.com/Akascape/CtkTable for the custom tkinter widgets
-
 def main():
+    application = QApplication(sys.argv)
     logic_instance = logic()
-    app = GUI(logic_instance)
-    app.mainloop()
+    window = GUI(logic_instance)
+    window.show()
+    sys.exit(application.exec())
     
 if __name__ == "__main__":
     main()

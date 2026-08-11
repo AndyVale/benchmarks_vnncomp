@@ -79,13 +79,13 @@ Run the command-line interface with:
 python cli_gen_instances.py --inbench "mnist" --max_par 100000 --outdir "./" --outname "my_inst.csv"
 ```
 
-Run the GUI from the repository root with:
+Run the PyQt6 GUI from the repository root with:
 
 ```bash
 python -m GUI_gen_instance.gen_instance_GUI
 ```
 
-Both interfaces call the same functions in `gen_instances.py`, so equivalent filters produce equivalent instance files.
+Both interfaces call the same functions in `gen_instances.py`, so equivalent filters produce equivalent instance files. The GUI uses PyQt6's model/view table and does not depend on CustomTkinter or CTkTable.
 
 **Command-Line Arguments**:
   - The script is configurable via command-line arguments, allowing you to specify:

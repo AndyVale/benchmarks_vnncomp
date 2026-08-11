@@ -1,7 +1,7 @@
 import os
 
 from gen_instances import (
-    BENCHMARKS, BENCHMARKS_VNNCOMP_DIR, NEURAL_NETWORKS_FILE,
+    BENCHMARKS, BENCHMARKS_VNNCOMP_DIR, GITHUB_REPO, NEURAL_NETWORKS_FILE,
     ONNX_NODES, filter_dataframe, get_network_tuples, keep_architectures,
     keep_benchmarks, keep_nodes, load_nns_dataframe, param_range_filter,
     remove_benchmarks, remove_nodes,
@@ -27,7 +27,8 @@ class logic():
         self.path_to_dataset = path_to_input_dataset
         self.path_to_input_instances = path_to_input_instances
         self.path_to_output_instances = path_to_output_instances
-        self.dataframe = load_nns_dataframe(self.path_to_dataset)
+        self._metadata_cache = None
+        self.dataframe = self._load_metadata()
         self.all_nodes = ONNX_NODES
 
         self.calculated_instances = []
@@ -70,7 +71,12 @@ class logic():
 
     def get_benchmarks_sample(self):
         self.reset_filters()
-        self.get_filtered_instances(self.included_architectures, self.incuded_benchmarks, self.included_nodes, self.excluded_nodes, self.min_params, self.max_params)
+        # The table displays network metadata; do not scan every benchmark's
+        # instances.csv until the user explicitly requests generation.
+        self.filter_benchmarks(self.incuded_benchmarks)
+        self.filter_architectures(self.included_architectures)
+        self.filter_nodes(self.included_nodes, self.excluded_nodes)
+        self.filter_params(self.min_params, self.max_params)
         dictionaries = []
         for i, row in self.dataframe.iterrows():
             #dictionaries.append({'onnx': row['onnx'].replace('.onnx',''), 'architecture': row['architecture'], 'benchmark': row['benchmark'], 'n_params': row['n_params'], 'node_types': row['node_types']})
@@ -79,7 +85,14 @@ class logic():
         return dictionaries
 
     def reset_filters(self):
-        self.dataframe = load_nns_dataframe(self.path_to_dataset)
+        self.dataframe = self._load_metadata().copy(deep=True)
+
+    def _load_metadata(self):
+        """Load the network metadata once, then reuse it for GUI filtering."""
+        if self._metadata_cache is None or self._metadata_cache_path != self.path_to_dataset:
+            self._metadata_cache = load_nns_dataframe(self.path_to_dataset)
+            self._metadata_cache_path = self.path_to_dataset
+        return self._metadata_cache
     
     def filter_benchmarks(self, benchmarks):
         if(len(benchmarks) == 0):#TODO Remove this workaround
@@ -105,7 +118,8 @@ class logic():
         self.filter_architectures(architectures)
         self.filter_nodes(inc_nodes, exc_nodes)
         self.filter_params(min_params, max_params)
-        self.calculated_instances = get_network_tuples(self.dataframe, self.path_to_output_instances)
+        output_dir = os.path.dirname(os.path.abspath(self.path_to_output_instances))
+        self.calculated_instances = get_network_tuples(self.dataframe, {"outdir": output_dir})
     
     def write_output_instances(self):
         with open(self.path_to_output_instances, 'w') as file:

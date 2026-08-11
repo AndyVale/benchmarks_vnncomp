@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import gen_instances as generator
 from cli_gen_instances import main as cli_main
+from GUI_gen_instance.logic import logic as GuiLogic
 
 
 def metadata_frame():
@@ -86,3 +87,13 @@ def test_cli_delegates_to_shared_generator(monkeypatch):
     monkeypatch.setattr("cli_gen_instances.generate_instances", lambda args: captured.setdefault("args", args) or [])
     cli_main()
     assert captured["args"]["outname"] == "demo.csv"
+
+
+def test_gui_logic_caches_metadata_loads(monkeypatch, tmp_path):
+    dataset = tmp_path / "nns.csv"
+    calls = []
+    monkeypatch.setattr("GUI_gen_instance.logic.load_nns_dataframe", lambda path: calls.append(path) or metadata_frame())
+    controller = GuiLogic(path_to_input_dataset=str(dataset), possible_origins=["demo", "other"])
+    controller.reset_filters()
+    controller.reset_filters()
+    assert calls == [str(dataset)]

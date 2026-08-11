@@ -1,20 +1,26 @@
-import customtkinter as ctk
-from .support_gui import SupportFrame
-from .front_gui import MainFrame
+from PyQt6.QtWidgets import QMainWindow, QSplitter, QWidget, QVBoxLayout
 
-class GUI(ctk.CTk):
+from .filter_gui import FilterPanel
+from .front_gui import BenchmarkPanel
+from .support_gui import SupportPanel
+
+
+class GUI(QMainWindow):
     def __init__(self, logic_instance):
-        ctk.CTk.__init__(self)
-        self.title("Instances Generator")
+        super().__init__()
         self.logic_instance = logic_instance
-        self.geometry("800x400")
-        ctk.set_appearance_mode("system")
-        ctk.set_default_color_theme("blue")
-        self.minsize(350, 395)
-        self.createWidgets()
+        self.setWindowTitle("Instances Generator")
+        self.resize(1000, 650)
 
-    def createWidgets(self):
-        self.supportFrame = SupportFrame(self)
-        self.supportFrame.pack(side="top", fill="x", expand=False)
-        self.mainFrame = MainFrame(self)
-        self.mainFrame.pack(side="top", fill="both", expand=True)
+        root = QWidget()
+        layout = QVBoxLayout(root)
+        layout.addWidget(SupportPanel(self))
+        splitter = QSplitter()
+        splitter.addWidget(FilterPanel(self))
+        splitter.addWidget(BenchmarkPanel(self))
+        splitter.setStretchFactor(1, 1)
+        layout.addWidget(splitter)
+        self.setCentralWidget(root)
+
+    def refresh_table(self):
+        self.findChild(BenchmarkPanel).refresh()

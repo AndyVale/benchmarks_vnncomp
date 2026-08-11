@@ -6,6 +6,7 @@ import pandas as pd
 import onnx
 
 # Repository configuration is available to both the CLI and GUI adapters.
+GITHUB_REPO = "https://github.com/AndyVale/benchmarks_vnncomp"
 BENCHMARKS_VNNCOMP_DIR = os.path.abspath(os.path.dirname(__file__))
 FULLYCONNECTED_BENCHMARKS_VNNCOMP_DIR = os.path.join(BENCHMARKS_VNNCOMP_DIR, 'fullyconnected_benchmarks_vnncomp')
 CONVOLUTIONAL_BENCHMARKS_VNNCOMP_DIR = os.path.join(BENCHMARKS_VNNCOMP_DIR, 'convolutional_benchmarks_vnncomp')

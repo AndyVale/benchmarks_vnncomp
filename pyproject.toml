@@ -5,8 +5,9 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "customtkinter>=6.0.0",
+    "ctktable>=1.1",
     "onnx>=1.22.0",
     "pandas>=3.0.5",
+    "PyQt6>=6.10.0",
     "pytest>=9.1.1",
 ]
