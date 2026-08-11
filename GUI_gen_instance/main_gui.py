@@ -1,6 +1,6 @@
 import customtkinter as ctk
-from support_gui import SupportFrame
-from front_gui import MainFrame
+from .support_gui import SupportFrame
+from .front_gui import MainFrame
 
 class GUI(ctk.CTk):
     def __init__(self, logic_instance):

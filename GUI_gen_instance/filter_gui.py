@@ -1,6 +1,6 @@
 from typing import Any, Tuple
 import customtkinter as ctk
-from CTkScrollableDropdown import CTkScrollableDropdown
+from .CTkScrollableDropdown import CTkScrollableDropdown
 
 class ArchitectureFilterFrame(ctk.CTkFrame):
     '''Frame that contains the architecture filter widgets, there are three checkboxes for the architectures: 'fullyconnected', 'convolutional', 'residual' '''

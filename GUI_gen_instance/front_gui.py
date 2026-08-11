@@ -1,7 +1,7 @@
 import customtkinter as ctk
-from CTkXYFrame import CTkXYFrame 
+from .CTkXYFrame import CTkXYFrame 
 from CTkTable import CTkTable
-from filter_gui import FilterScrollFrame
+from .filter_gui import FilterScrollFrame
 
 class BenchmarkScrollFrame(ctk.CTkFrame):
     def __init__(self, master, *args, **kwargs):

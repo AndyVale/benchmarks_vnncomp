@@ -1,4 +1,11 @@
-from definitions import *
+import os
+
+from gen_instances import (
+    BENCHMARKS, BENCHMARKS_VNNCOMP_DIR, NEURAL_NETWORKS_FILE,
+    ONNX_NODES, filter_dataframe, get_network_tuples, keep_architectures,
+    keep_benchmarks, keep_nodes, load_nns_dataframe, param_range_filter,
+    remove_benchmarks, remove_nodes,
+)
 
 class logic():
     '''
@@ -21,7 +28,7 @@ class logic():
         self.path_to_input_instances = path_to_input_instances
         self.path_to_output_instances = path_to_output_instances
         self.dataframe = load_nns_dataframe(self.path_to_dataset)
-        self.all_nodes = get_nodes_types()
+        self.all_nodes = ONNX_NODES
 
         self.calculated_instances = []
         self.included_nodes = []
@@ -120,7 +127,8 @@ class logic():
 #    return dictionaries
 #
 def get_nodes_types(): 
-    return sorted(set([schema.name.lower() for schema in onnx.defs.get_all_schemas()]))
+    """Compatibility helper retained for callers of the old GUI module."""
+    return ONNX_NODES
 #
 #def get_node():
 #    return random.choice(get_nodes_types())

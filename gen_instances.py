@@ -5,6 +5,28 @@ import random
 import pandas as pd
 import onnx
 
+# Repository configuration is available to both the CLI and GUI adapters.
+BENCHMARKS_VNNCOMP_DIR = os.path.abspath(os.path.dirname(__file__))
+FULLYCONNECTED_BENCHMARKS_VNNCOMP_DIR = os.path.join(BENCHMARKS_VNNCOMP_DIR, 'fullyconnected_benchmarks_vnncomp')
+CONVOLUTIONAL_BENCHMARKS_VNNCOMP_DIR = os.path.join(BENCHMARKS_VNNCOMP_DIR, 'convolutional_benchmarks_vnncomp')
+RESIDUAL_BENCHMARKS_VNNCOMP_DIR = os.path.join(BENCHMARKS_VNNCOMP_DIR, 'residual_benchmarks_vnncomp')
+EXPECTED_RESULTS_FILE = os.path.join(BENCHMARKS_VNNCOMP_DIR, 'expected_results.csv')
+NEURAL_NETWORKS_FILE = os.path.join(BENCHMARKS_VNNCOMP_DIR, 'nns.csv')
+DEBUG_FILE = os.path.join(BENCHMARKS_VNNCOMP_DIR, 'filtered_nns.csv')
+ARCHITECTURES = ['convolutional', 'fullyconnected', 'residual']
+ONNX_NODES = sorted(schema.name.lower() for schema in onnx.defs.get_all_schemas())
+BENCHMARKS = sorted(set(
+    benchmark.lower()
+    for path in (FULLYCONNECTED_BENCHMARKS_VNNCOMP_DIR,
+                 CONVOLUTIONAL_BENCHMARKS_VNNCOMP_DIR,
+                 RESIDUAL_BENCHMARKS_VNNCOMP_DIR)
+    if os.path.isdir(path)
+    for benchmark in os.listdir(path)
+    if os.path.isdir(os.path.join(path, benchmark))
+))
+RESULTS = ['sat', 'unsat', 'known', '*']
+verbose_print = lambda *args: None
+
 
 def init_parser() -> argparse.ArgumentParser:
     '''Initializes the parser with the desired arguments'''
@@ -248,12 +270,12 @@ def filter_instances_by_result(network_tuples: list, expected_result: str) -> li
         return network_tuples
     
     expected_results_df = pd.read_csv(EXPECTED_RESULTS_FILE)
-    if arg_dict['result'] == 'known':
+    if expected_result == 'known':
         verbose_print(f"Keeping only instances with known results")
         local_network_tuples = [line for line in network_tuples if not expected_results_df[(expected_results_df['onnx'] == line['onnx']) & (expected_results_df['vnnlib'] == line['vnnlib'])].empty]
     else:
-        verbose_print(f"Keeping instances with expected result {arg_dict['result']}")
-        local_network_tuples = [line for line in network_tuples if not expected_results_df[(expected_results_df['onnx'] == line['onnx']) & (expected_results_df['vnnlib'] == line['vnnlib']) & (expected_results_df['result'] == arg_dict['result'])].empty]
+        verbose_print(f"Keeping instances with expected result {expected_result}")
+        local_network_tuples = [line for line in network_tuples if not expected_results_df[(expected_results_df['onnx'] == line['onnx']) & (expected_results_df['vnnlib'] == line['vnnlib']) & (expected_results_df['result'] == expected_result)].empty]
 
     return local_network_tuples
 
@@ -299,16 +321,25 @@ def write_output_file(dict_args: dict, network_tuples: list) -> None:
             csv_line = ','.join(row).replace('\\', '/').replace('\n', '')
             output_file.write(csv_line + '\n')
 
-if __name__ == '__main__':
-    # Define a bunch of constants
-    BENCHMARKS_VNNCOMP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
-    FULLYCONNECTED_BENCHMARKS_VNNCOMP_DIR = os.path.join(BENCHMARKS_VNNCOMP_DIR, 'fullyconnected_benchmarks_vnncomp')
-    CONVOLUTIONAL_BENCHMARKS_VNNCOMP_DIR = os.path.join(BENCHMARKS_VNNCOMP_DIR, 'convolutional_benchmarks_vnncomp')
-    RESIDUAL_BENCHMARKS_VNNCOMP_DIR = os.path.join(BENCHMARKS_VNNCOMP_DIR, 'residual_benchmarks_vnncomp')
-    EXPECTED_RESULTS_FILE = os.path.join(BENCHMARKS_VNNCOMP_DIR, 'expected_results.csv')
-    NEURAL_NETWORKS_FILE = os.path.join(BENCHMARKS_VNNCOMP_DIR, 'nns.csv')
-    DEBUG_FILE = os.path.join(BENCHMARKS_VNNCOMP_DIR, 'filtered_nns.csv')
+def generate_instances(arg_dict: dict) -> list:
+    """Generate instances from a normalized configuration and write the output."""
+    global verbose_print
+    arg_dict = dict(arg_dict)
+    arg_dict['outdir'] = os.path.abspath(arg_dict['outdir'])
+    arg_dict['outname'] = os.path.splitext(arg_dict['outname'])[0] + '.csv'
+    verbose_print = print if arg_dict.get('verbosity', False) else (lambda *args: None)
+    nns_df = load_nns_dataframe(NEURAL_NETWORKS_FILE)
+    filtered = filter_dataframe(nns_df, arg_dict)
+    if arg_dict.get('debug'):
+        filtered.to_csv(DEBUG_FILE, index=False)
+    instances = get_network_tuples(filtered, arg_dict)
+    instances = filter_instances_by_result(instances, arg_dict['result'])
+    instances = sample_instances(instances, arg_dict['maxprop'])
+    write_output_file(arg_dict, instances)
+    return instances
 
+
+if __name__ == '__main__':
     # Check required dir and files are present 
     if not os.path.isfile(NEURAL_NETWORKS_FILE):
         print(f"This script requires the file {NEURAL_NETWORKS_FILE} to be in the same directory as the script")
@@ -321,13 +352,6 @@ if __name__ == '__main__':
     if not os.path.isdir(FULLYCONNECTED_BENCHMARKS_VNNCOMP_DIR) or not os.path.isdir(CONVOLUTIONAL_BENCHMARKS_VNNCOMP_DIR) or not os.path.isdir(RESIDUAL_BENCHMARKS_VNNCOMP_DIR):
         print(f"This script requires the directories 'fullyconnected_benchmarks_vnncomp', 'convolutional_benchmarks_vnncomp' and 'residual_benchmarks_vnncomp' to be in the same directory as the script")
         exit(1)
-
-    # Define some lists 
-    ARCHITECTURES = ['convolutional', 'fullyconnected', 'residual']
-    ONNX_NODES = sorted([schema.name.lower() for schema in onnx.defs.get_all_schemas()]) # Get all the ONNX nodes and convert them to lowercase
-    BENCHMARKS = sorted(set(net.lower() for path in [FULLYCONNECTED_BENCHMARKS_VNNCOMP_DIR, CONVOLUTIONAL_BENCHMARKS_VNNCOMP_DIR, RESIDUAL_BENCHMARKS_VNNCOMP_DIR]
-                            for net in os.listdir(path) if os.path.isdir(os.path.join(path, net))))# Get all the benchmarks and convert them to lowercase
-    RESULTS = ['sat', 'unsat', 'known', '*']
 
     # Parser setup
     parser = init_parser()

@@ -4,7 +4,9 @@ This repository provides a reorganized collection of benchmarks from VNNCOMP, st
 In this repository, you can also find:
   * 'extract_compress_files_python.py': A script for extracting .gz files and compressing .onnx and .vnnlib files.
   * 'extract_files_windows.bat: A batch file for extracting .gz files on Windows.
-  * 'gen_instance.py: A script for generating a custom instances.csv file based on the provided arguments. This allows you to create a personalized benchmark tailored to your needs, such as focusing on a specific architecture or a particular layer.
+  * `gen_instances.py`: The shared instance-generation library containing the filtering and output logic.
+  * `cli_gen_instances.py`: The command-line entry point for generating a custom instances CSV file.
+  * `GUI_gen_instance/`: A graphical entry point that uses the same shared generation logic.
   * nns.csv: A CSV file used by gen_instance.py.
   * expected_results.csv: A CSV file that provides a list of expected results for instances specified by {model.onnx, property.vnnlib}. These results are sourced from VNNCOMP results for the years 2022, 2023, and 2024.
 
@@ -35,20 +37,20 @@ You can specify the architecture you want to process by using the --architecture
 
 Extraction:
 ```bash
-py extract_compress_files_python.py -m e 
+python3 extract_compress_files_python.py -m e 
 ```
 Extraction (only in the convolution folder):
 ```bash
-py extract_compress_files_python.py -m e -a conv
+python3 extract_compress_files_python.py -m e -a conv
 ```
 
 Compression:
 ```bash
-py extract_compress_files_python.py -m c
+python3 extract_compress_files_python.py -m c
 ```
 Compression (only in the convolution folder):
 ```bash
-py extract_compress_files_python.py -m e -a conv
+python3 extract_compress_files_python.py -m e -a conv
 ```
 
 ### Linux
@@ -69,7 +71,21 @@ You might already have software that allows your Windows PC to run Unix commands
 
 ## Filter Instances Script
 
-This repository also includes a script, 'gen_instances.py', which allows you to filter and generate a file of neural network instances based on specified criteria. The script leverages the 'nns.csv' file, which contains information about the neural networks within each directory. For the script to work properly, all submodules are required. If you do not want to download all of them, you can specify which ones you do not intend to use in the 'exarc' parameter. 
+This repository includes a shared generation module and two front ends. `gen_instances.py` contains the reusable filtering, instance lookup, sampling, and output logic. `cli_gen_instances.py` provides the command-line interface, while `GUI_gen_instance` provides a graphical interface using the same implementation. The generator leverages `nns.csv`, which contains metadata about the neural networks. For the generator to work properly, all required submodules must be available; if you do not want to download all of them, exclude unused architectures with `--exarc`.
+
+Run the command-line interface with:
+
+```bash
+python cli_gen_instances.py --inbench "mnist" --max_par 100000 --outdir "./" --outname "my_inst.csv"
+```
+
+Run the GUI from the repository root with:
+
+```bash
+python -m GUI_gen_instance.gen_instance_GUI
+```
+
+Both interfaces call the same functions in `gen_instances.py`, so equivalent filters produce equivalent instance files.
 
 **Command-Line Arguments**:
   - The script is configurable via command-line arguments, allowing you to specify:

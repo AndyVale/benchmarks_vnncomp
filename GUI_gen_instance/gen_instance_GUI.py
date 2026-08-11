@@ -1,5 +1,5 @@
-from main_gui import GUI
-from logic import logic
+from .main_gui import GUI
+from .logic import logic
 
 # Thanks to Akascape: https://github.com/Akascape/CTkXYFrame, https://github.com/Akascape/CTkScrollableDropdown, https://github.com/Akascape/CtkTable for the custom tkinter widgets
 
